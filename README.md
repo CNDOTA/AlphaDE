@@ -21,6 +21,7 @@ pip install tape_proteins
 
 ## 1.2 Download TAPE oracle and pretrained ESM2 models
 oracle download: https://github.com/HeliXonProtein/proximal-exploration/blob/main/download_landscape.sh
+
 ESM2-35M model download: https://huggingface.co/facebook/esm2_t12_35M_UR50D
 
 # 2. Finetune
