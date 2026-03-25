@@ -5,26 +5,27 @@ Using the following script to create a conda environment
 ```bash
 conda create -n alphade python=3.10
 conda activate alphade
-
 pip install -r requirements.txt
-
-pip install transformers[torch]
+pip install transformers[torch]==4.48.3
 pip install fair-esm
 pip install transformers[sentencepiece]
 pip install deepblast
-
 conda install -c conda-forge -c bioconda hhsuite
-
 pip install numba
 pip install tape_proteins
+pip install sequence-models
 ```
 
 ## 1.2 Download TAPE oracle and pretrained ESM2 models
-oracle download: https://github.com/HeliXonProtein/proximal-exploration/blob/main/download_landscape.sh
+Step 1. Download oracle weights from https://drive.usercontent.google.com/download?id=1uy9zgtJ60Z83LCbm7Z_AoksAkmK4CcsC;
 
-ESM2-35M model download: https://huggingface.co/facebook/esm2_t12_35M_UR50D
+Step 2. Unzip the file and put the "tape_landscape" folder under the "AlphaDE" folder;
 
-# 2. Finetune
+Step 3. Download ESM2-35M model from https://huggingface.co/facebook/esm2_t12_35M_UR50D;
+
+Step 4. Put the "esm2_t12_35M_UR50D" folder under the "AlphaDE" folder.
+
+# 2. Fine-tune
 ## 2.1 Prepare the fine-tuning dataset
 The homology dataset for fine-tuning is available at 
 "AlphaDE/data/\$task/percent_data/\$task_sequences_bottom_percent_1.0.txt"
@@ -32,6 +33,7 @@ The homology dataset for fine-tuning is available at
 ## 2.2. Fine-tuning protein language models
 In the folder of "AlphaDE/finetuning", using the following script as
 ```commandline
+cd ./finetuning
 python -u run_mlm.py \
     --model_name_or_path $pretrained_model_path \
     --train_file $finetuning_data_path \
@@ -55,6 +57,7 @@ ESM2_PATH = $finetuned_model_path
 ```
 
 ## 3.2. Run AlphaDE
+Run the following python command by specifying the task, results will be saved in the "AlphaDE/results" folder.
 ### Task avGFP
 ```bash
 python train.py --task=avGFP --gpus=0 --idx=1 > avGFP_ft_35M_1.log 2>&1 &
