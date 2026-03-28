@@ -75,7 +75,7 @@ python -u run_mlm.py \
 
 ### 4.1 Configure Model Paths
 
-Edit `vocab.py` to set the maximum fitness and fine-tuned model path:
+Edit `vocab.py` to set the estimated maximum fitness (for scaling the reward) and fine-tuned model path:
 
 ```python
 MAX_TAPE = $predefined_task_maximum_fitness
