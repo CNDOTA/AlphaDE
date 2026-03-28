@@ -1,7 +1,21 @@
-# 1. Install
+# AlphaDE
 
-## 1.1 Conda environment
-Using the following script to create a conda environment
+AlphaDE: boosting in silico directed evolution with fine-tuned protein language model and tree search.
+
+AlphaDE combines Monte Carlo Tree Search (MCTS) with AlphaZero-style architecture and fine-tuned protein language models (ESM2) with homology sequences to evolve proteins toward higher fitness.
+
+## Table of Contents
+
+1. [Installation](#1-installation)
+2. [Model Setup](#2-model-setup)
+3. [Fine-tuning](#3-fine-tuning)
+4. [MCTS Inference](#4-mcts-inference)
+5. [Project Structure](#5-project-structure)
+
+## 1. Installation
+
+### 1.1 Conda Environment
+
 ```bash
 conda create -n alphade python=3.10
 conda activate alphade
@@ -16,23 +30,32 @@ pip install tape_proteins
 pip install sequence-models
 ```
 
-## 1.2 Download TAPE oracle and pretrained ESM2 models
-Step 1. Download oracle weights from https://drive.usercontent.google.com/download?id=1uy9zgtJ60Z83LCbm7Z_AoksAkmK4CcsC;
+## 2. Model Setup
 
-Step 2. Unzip the file and put the "tape_landscape" folder under the "AlphaDE" folder;
+### 2.1 Download TAPE Oracle
 
-Step 3. Download ESM2-35M model from https://huggingface.co/facebook/esm2_t12_35M_UR50D;
+1. Download oracle weights from: https://drive.usercontent.google.com/download?id=1uy9zgtJ60Z83LCbm7Z_AoksAkmK4CcsC
 
-Step 4. Put the "esm2_t12_35M_UR50D" folder under the "AlphaDE" folder.
+2. Unzip and place the `tape_landscape` folder under the `AlphaDE` directory.
 
-# 2. Fine-tune
-## 2.1 Prepare the fine-tuning dataset
-The homology dataset for fine-tuning is available at 
-"AlphaDE/data/\$task/percent_data/\$task_sequences_bottom_percent_1.0.txt"
+### 2.2 Download ESM2 Model
 
-## 2.2. Fine-tuning protein language models
-In the folder of "AlphaDE/finetuning", using the following script as
-```commandline
+1. Download ESM2-35M model from: https://huggingface.co/facebook/esm2_t12_35M_UR50D
+
+2. Place the `esm2_t12_35M_UR50D` folder under the `AlphaDE` directory.
+
+## 3. Fine-tuning
+
+### 3.1 Prepare Dataset
+
+The homology dataset for fine-tuning is located at:
+```
+AlphaDE/data/$task/percent_data/$task_sequences_bottom_percent_1.0.txt
+```
+
+### 3.2 Run Fine-tuning
+
+```bash
 cd ./finetuning
 python -u run_mlm.py \
     --model_name_or_path $pretrained_model_path \
@@ -48,45 +71,66 @@ python -u run_mlm.py \
     --output_dir $finetuned_model_path > log.txt
 ```
 
-# 3. MCTS Inference
-## 3.1. Model path configuration
-We need to configure the estimated maximum fitness (for scaling the reward) and fine-tuned model path in "vocab.py" first.
-```commandline
+## 4. MCTS Inference
+
+### 4.1 Configure Model Paths
+
+Edit `vocab.py` to set the maximum fitness and fine-tuned model path:
+
+```python
 MAX_TAPE = $predefined_task_maximum_fitness
 ESM2_PATH = $finetuned_model_path
 ```
 
-## 3.2. Run AlphaDE
-Run the following python command by specifying the task, results will be saved in the "AlphaDE/results" folder.
-### Task avGFP
-```bash
-python train.py --task=avGFP --gpus=0 --idx=1 > avGFP_ft_35M_1.log 2>&1 &
+### 4.2 Run AlphaDE
+
+Results are saved in the `AlphaDE/results` folder.
+
+| Task  | Command                                                                 |
+|-------|-------------------------------------------------------------------------|
+| avGFP | `python train.py --task=avGFP --gpus=0 --idx=1 > avGFP_ft_35M_1.log 2>&1 &` |
+| AAV   | `python train.py --task=AAV --gpus=0 --idx=1 > AAV_ft_35M_1.log 2>&1 &`   |
+| TEM   | `python train.py --task=TEM --gpus=0 --idx=1 > TEM_ft_35M_1.log 2>&1 &`   |
+| E4B   | `python train.py --task=E4B --gpus=0 --idx=1 > E4B_ft_35M_1.log 2>&1 &`    |
+| AMIE  | `python train.py --task=AMIE --gpus=0 --idx=1 > AMIE_ft_35M_1.log 2>&1 &`  |
+| LGK   | `python train.py --task=LGK --gpus=0 --idx=1 > LGK_ft_35M_1.log 2>&1 &`    |
+| PAB1  | `python train.py --task=PAB1 --gpus=0 --idx=1 > PAB1_ft_35M_1.log 2>&1 &`  |
+| UBE2I | `python train.py --task=UBE2I --gpus=0 --idx=1 > UBE2I_ft_35M_1.log 2>&1 &` |
+
+### 4.3 Optional Parameters
+
+| Parameter        | Default | Description                          |
+|------------------|---------|--------------------------------------|
+| `--cpuct`        | 10      | MCTS exploration constant            |
+| `--tree_depth`   | 100     | Maximum mutation search depth        |
+| `--rollout_number` | 200   | Number of MCTS playouts             |
+
+## 5. Project Structure
+
 ```
-### Task AAV
-```bash
-python train.py --task=AAV --gpus=0 --idx=1 > AAV_ft_35M_1.log 2>&1 &
+AlphaDE/
+├── train.py                         # Main training pipeline
+├── vocab.py                         # Configuration (alphabet, scores, paths)
+├── plm_v_net.py                    # Policy-Value Network
+├── mcts_alphaZero_mutate_expand.py  # MCTS AlphaZero mutator
+├── sequence_env_m_p.py              # Sequence environment
+├── esm1b_landscape.py              # ESM1b landscape model
+├── finetuning/
+│   └── run_mlm.py                   # MLM fine-tuning script
+├── data/                            # Fine-tuning datasets
+├── tape_landscape/                  # TAPE oracle models
+├── esm2_t12_35M_UR50D/              # ESM2 pretrained model
+└── results/                        # Output results
 ```
-### Task TEM
-```bash
-python train.py --task=TEM --gpus=0 --idx=1 > TEM_ft_35M_1.log 2>&1 &
-```
-### Task E4B
-```bash
-python train.py --task=E4B --gpus=0 --idx=1 > E4B_ft_35M_1.log 2>&1 &
-```
-### Task AMIE
-```bash
-python train.py --task=AMIE --gpus=0 --idx=1 > AMIE_ft_35M_1.log 2>&1 &
-```
-### Task LGK
-```bash
-python train.py --task=LGK --gpus=0 --idx=1 > LGK_ft_35M_1.log 2>&1 &
-```
-### Task PAB1
-```bash
-python train.py --task=PAB1 --gpus=0 --idx=1 > PAB1_ft_35M_1.log 2>&1 &
-```
-### Task UBE2I
-```bash
-python train.py --task=UBE2I --gpus=0 --idx=1 > UBE2I_ft_35M_1.log 2>&1 &
-```
+
+## Citation
+
+If you use AlphaDE in your research, please cite the original paper.
+
+```bibtex
+@article{yang2025alphade,
+  title={AlphaDE: boosting in silico directed evolution with fine-tuned protein language model and tree search},
+  author={Yang, Yaodong and Wang, Yang and Li, Jinpeng and Guo, Pei and Han, Da and Chen, Guangyong and Heng, Pheng-Ann},
+  journal={arXiv preprint arXiv:2511.09900},
+  year={2025}
+}
